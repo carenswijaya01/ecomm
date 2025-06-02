@@ -1,0 +1,32 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: ${NODE_ENV} # development or production
+    image: "${IMAGE_NAME}:${TAG}"
+    container_name: ${CONTAINER_NAME}
+    environment:
+      - NODE_ENV=${NODE_ENV} # development or production
+    volumes:
+      - ./:/home/node/app
+    restart: always
+    command: sh -c 'npm install && if [ "$NODE_ENV" = "development" ]; then npm run start; else pm2-runtime bin/www; fi'
+    # command: sh -c 'npm install && npx sequelize-cli db:migrate && if [ "$NODE_ENV" = "development" ]; then npm run start; else pm2-runtime bin/www; fi'
+    ports:
+      - "5001:3000"
+    depends_on:
+      - db
+    user: root
+  db:
+    image: postgres:16
+    container_name: ${DB_CONTAINER_NAME}
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - ./db_data:/var/lib/postgresql/data
+    restart: always
+    ports:
+      - "7001:5432"
